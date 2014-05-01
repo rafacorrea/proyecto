@@ -16,12 +16,15 @@ using namespace std;
 char randomLetra(); //Letra al "azar" ;vocales mayor %
 bool checkLetra(char, string); //revisar si *char* esta en *string*
 int sumarPuntos(string s); 
+void buscarNombre(string str, multimap<string,int> map); //busca e imprime todas las entradas con llave str
+multimap<string,int> crearMapa(); //crea un multimapa desde scores.txt
 
 int _tmain(int argc, _TCHAR* argv[])
 {
 	std::unordered_map<std::string, int> diccionario; // hash table donde se guardaran las palabras
 	string str; //dicionario.txt >> str
 	ifstream file("diccionario.txt");
+	string decision = "r";
 
 	srand(time(NULL));
 
@@ -45,88 +48,125 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	/* Ingresar palabras */
 	Timer t;
-	set<string> palabras;
+	;
 
-
+	
 	char letra1; 
 	char letra2; 
-	bool correcto = true; 
+	bool correcto;
 
-	t.start();
-
-	while(t.elapsedTime() < 5) //tiempo para contestar
+	/* JUGAR */
+	while(decision == "r") // decision al final
 	{
-		if(correcto) //nuevas letras...
+		t.start();
+		set<string> palabras;
+		correcto = true;
+		while(t.elapsedTime() < 5) //tiempo para contestar
 		{
-			letra1 = randomLetra();
-			letra2 = randomLetra();
-			while(letra1==letra2)
-				letra2 = randomLetra();
-			cout << "Ingrese una palabra que contenga la letra " << letra1 << " y " << letra2 << endl;
-		}
-
-		cin >> str;
-
-		if(checkLetra(letra1,str) && checkLetra(letra2,str)) 
-		{
-			if (diccionario.find(str) != diccionario.end())
+			if(correcto) //nuevas letras...
 			{
-				palabras.insert(str);
-				correcto = true;
+				letra1 = randomLetra();
+				letra2 = randomLetra();
+				while(letra1==letra2)
+					letra2 = randomLetra();
+				cout << "Ingrese una palabra que contenga la letra " << letra1 << " y " << letra2 << endl;
+			}
+
+			cin >> str;
+
+			if(checkLetra(letra1,str) && checkLetra(letra2,str)) 
+			{
+				if (diccionario.find(str) != diccionario.end())
+				{
+					palabras.insert(str);
+					correcto = true;
+				}
+				else
+					correcto = false;
 			}
 			else
 				correcto = false;
 		}
-		else
-			correcto = false;
-	}
 
-	/* Generar tabla de puntos */
+		/* Generar tabla de puntos */
 
-	int acumulador = 0;
-	int temp;
+		int acumulador = 0;
+		int temp;
 
-	cout << "Palabra\tPuntos" << endl;
-	for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
-	{
-		temp = sumarPuntos(*set_it);
-		cout << *set_it << "\t" << temp <<endl;
-		acumulador += temp;
-	}
-
-	cout << endl << "TOTAL\t" << acumulador << endl;
-
-	/* Scores */
-	cout << "Ingrese su nombre" << endl;
-	string nombre;
-	cin.ignore();
-	getline(cin, nombre);
-	
-
-	ofstream scores ("scores.txt", ios::app);
-	if (scores.is_open())
-	{
-		scores << acumulador << ";" << nombre << "\n";
-		scores.close();
-	}
-	
-	else 
-		cout << "No se pudo guardar el score" << endl;
-
-	map<int,string> buscarScores;
-	ifstream scoreREAD("scores.txt");
-	if(scoreREAD.is_open())
-	{
-		while(getline(scoreREAD, str))
+		cout << "Palabra\t\tPuntos" << endl;
+		for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
 		{
-			buscarScores[atoi(str.substr(0, str.find(";")).c_str())] = str.substr(str.find(";") + 1);
-
+			temp = sumarPuntos(*set_it);
+			cout << *set_it << "\t\t" << temp <<endl;
+			acumulador += temp;
 		}
-		scoreREAD.close();
+
+		cout << endl << "TOTAL\t" << acumulador << endl;
+
+		/* Scores */
+		cout << endl << "Ingrese su nombre para guardar el score" << endl;
+		string nombre;
+		cin.ignore();
+		getline(cin, nombre);
+	
+
+		ofstream scores ("scores.txt", ios::app);
+		if (scores.is_open())
+		{
+			scores << acumulador << ";" << nombre << "\n";
+			scores.close();
+		}
+	
+		else 
+			cout << "No se pudo guardar el score" << endl;
+
+		cout << endl << "Escriba un comando (r, -buscar *, -high)" << endl;
+		getline(cin, decision);
+	}	
+
+	/*Genera y popula el multimapa desde "scores.txt", despues busca el nombre en "decision" en ese mapa*/
+	if (decision.substr(0,7) == "-buscar")
+	{
+		buscarNombre(decision.substr(8), crearMapa()); 
 	}
 
 	
 	return 0;
+}
+
+
+multimap<string,int> crearMapa()
+{
+	multimap<string,int> scores;
+	string str;
+	ifstream scoreREAD("scores.txt");
+
+	if(scoreREAD.is_open())
+	{
+		while(getline(scoreREAD, str))
+		{
+			scores.insert(pair<string,int>(str.substr(str.find(";") + 1), atoi(str.substr(0, str.find(";")).c_str())));
+
+		}
+		scoreREAD.close();
+	}
+	else
+		cout << "Error al generar mapa" << endl;
+
+	return scores;
+}
+
+
+void buscarNombre(string str, multimap<string,int> map)
+{
+	pair<multimap<string,int>::iterator,multimap<string,int>::iterator> range;
+	range = map.equal_range(str);
+	cout << "Nombre\t\tScore\n" ;
+	for(multimap<string,int>::iterator range_it = range.first; range_it != range.second; range_it++)
+	{
+		cout << str << "\t\t" <<  range_it->second << endl;
+	}
+
 }
 
 
@@ -165,6 +205,8 @@ int sumarPuntos(string s)
 
 	return puntos;
 }
+
+
 char randomLetra()
 {
 	int temp = rand()%100;
@@ -218,6 +260,7 @@ char randomLetra()
 	else if (temp < 100)
 		return 'z';
 }
+
 
 bool checkLetra(char letra, string input)
 {

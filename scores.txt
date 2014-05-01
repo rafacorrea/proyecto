@@ -11,3 +11,21 @@
 225;rafa c
 105;rafa
 215;rafaelC
+240;rafa
+250;rafa
+345;rafa
+235;rafa
+0;rafa
+0;rafa
+165;rafa
+0;rafa
+165;rafa
+45;rafa
+190;rafa
+0;rafa
+260;rafa
+200;rafa
+70;rafa
+0;rafa
+165;rafa
+165;rafa
