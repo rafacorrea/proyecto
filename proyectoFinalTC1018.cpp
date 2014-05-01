@@ -4,97 +4,85 @@
 #include "stdafx.h"
 #include <unordered_map>
 #include <iostream>
-#include "assert.h"
 #include <string>
 #include <fstream>
 #include <time.h>
-#include <random>
-#include <vector>
-
+#include <set>
+#include "Timer.h"
 
 using namespace std;
 
-class timer {
-	private:
-		unsigned long begTime;
-	public:
-		void start() {
-			begTime = clock();
-		}
-
-		unsigned long elapsedTime() {
-			return ((unsigned long) clock() - begTime) / CLOCKS_PER_SEC;
-		}
-
-		bool isTimeout(unsigned long seconds) {
-			return seconds >= elapsedTime();
-		}
-};
-
-
-unsigned long hash_string( const string & s );
 char randomLetra();
 bool checkLetra(char, string);
 int sumarPuntos(string s);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	std::unordered_map<std::string, int> m;
-	ifstream file("diccionario.txt");
+	std::unordered_map<std::string, int> diccionario;
 	string str;
+	ifstream file("diccionario.txt");
+
+	srand(time(NULL));
+
 	if(file.is_open())
 	{
-		while(getline(file,str))
+		while(file>>str)
 		{
-			m[str] = hash_string(str);
+			++diccionario[str];
+		
 		}
 		file.close();
+		
 	}
 
 	else 
-		cout << "No se pudo abrir el archivo" << endl;
-
-	char temp = randomLetra();
-	cout << "Ingrese una palabra que contenga la letra " << temp << endl;
-	cin >> str;
-
-	// check if key is present
-	if(checkLetra(temp,str))
 	{
-		if (m.find(str) != m.end())
-			std::cout << "Se encontro la palabra \"" << str << "\"!"  << endl;
-		else
-			cout << str << " no es una palabra" << endl;
+		cout << "No se pudo abrir el archivo diccionario.txt, no se creo la tabla hash" << endl;
+		return false;
 	}
-	else
-		cout << "No contiene la letra " << temp << endl;
 
+	Timer t;
+	set<string> palabras;
 
-	timer t;
-	vector<string> test;
-	test.reserve(30);
-
-	int i = 0;
 	t.start();
+	char temp;
+	char temp2;
+	bool correcto = true;
 	while(t.elapsedTime() < 5)
 	{
+		if(correcto)
+		{
+			temp = randomLetra();
+			temp2 = randomLetra();
+			while(temp==temp2)
+				temp2 = randomLetra();
+			cout << "Ingrese una palabra que contenga la letra " << temp  << " y " << temp2 << endl;
+		}
 		cin >> str;
-		test.push_back(str);
+		if(checkLetra(temp,str) && checkLetra(temp2,str))
+		{
+			if (diccionario.find(str) != diccionario.end())
+			{
+				palabras.insert(str);
+				correcto = true;
+			}
+			else
+				correcto = false;
+		}
+		else
+			correcto = false;
 	}
 
 	cout << "Palabra\tPuntos" << endl;
-	for(vector<string>::iterator vectorit = test.begin(); vectorit != test.end(); vectorit++)
+	for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
 	{
-		cout << *vectorit << "\t" << sumarPuntos(*vectorit) <<endl;
+		cout << *set_it << "\t" << sumarPuntos(*set_it) <<endl;
 	}
-	// retrieve
-	//std::cout << m["hola"] << '\n';
-	//std::map<std::string, int>::iterator i = m.find("hola");
-	//assert(i != m.end());
-	//std::cout << "Key: " << i->first << " Value: " << i->second << '\n';
+
 
 	return 0;
 }
+
 
 int sumarPuntos(string s)
 {
@@ -197,11 +185,3 @@ bool checkLetra(char letra, string input)
 	return false;
 }
 
-unsigned long hash_string( const string & s )
-{
-  unsigned long h = 0; 
-  for ( int i=0 ; i < s.length(); i++)  
-    h = 5*h + s[i];   
-  
-  return h;
-}
