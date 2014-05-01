@@ -2,33 +2,35 @@
 //
 
 #include "stdafx.h"
-#include <unordered_map>
+#include <unordered_map> //hash table /map
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <time.h>
 #include <set>
 #include "Timer.h"
+#include <map>
+
 
 using namespace std;
 
-char randomLetra();
-bool checkLetra(char, string);
-int sumarPuntos(string s);
+char randomLetra(); //Letra al "azar" ;vocales mayor %
+bool checkLetra(char, string); //revisar si *char* esta en *string*
+int sumarPuntos(string s); 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	std::unordered_map<std::string, int> diccionario;
-	string str;
+	std::unordered_map<std::string, int> diccionario; // hash table donde se guardaran las palabras
+	string str; //dicionario.txt >> str
 	ifstream file("diccionario.txt");
 
 	srand(time(NULL));
 
+	/* Popular HASH */
 	if(file.is_open())
 	{
 		while(file>>str)
 		{
-			++diccionario[str];
+			++diccionario[str]; 
 		
 		}
 		file.close();
@@ -41,25 +43,31 @@ int _tmain(int argc, _TCHAR* argv[])
 		return false;
 	}
 
+	/* Ingresar palabras */
 	Timer t;
 	set<string> palabras;
 
+
+	char letra1; 
+	char letra2; 
+	bool correcto = true; 
+
 	t.start();
-	char temp;
-	char temp2;
-	bool correcto = true;
-	while(t.elapsedTime() < 5)
+
+	while(t.elapsedTime() < 5) //tiempo para contestar
 	{
-		if(correcto)
+		if(correcto) //nuevas letras...
 		{
-			temp = randomLetra();
-			temp2 = randomLetra();
-			while(temp==temp2)
-				temp2 = randomLetra();
-			cout << "Ingrese una palabra que contenga la letra " << temp  << " y " << temp2 << endl;
+			letra1 = randomLetra();
+			letra2 = randomLetra();
+			while(letra1==letra2)
+				letra2 = randomLetra();
+			cout << "Ingrese una palabra que contenga la letra " << letra1 << " y " << letra2 << endl;
 		}
+
 		cin >> str;
-		if(checkLetra(temp,str) && checkLetra(temp2,str))
+
+		if(checkLetra(letra1,str) && checkLetra(letra2,str)) 
 		{
 			if (diccionario.find(str) != diccionario.end())
 			{
@@ -73,13 +81,51 @@ int _tmain(int argc, _TCHAR* argv[])
 			correcto = false;
 	}
 
+	/* Generar tabla de puntos */
+
+	int acumulador = 0;
+	int temp;
+
 	cout << "Palabra\tPuntos" << endl;
 	for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
 	{
-		cout << *set_it << "\t" << sumarPuntos(*set_it) <<endl;
+		temp = sumarPuntos(*set_it);
+		cout << *set_it << "\t" << temp <<endl;
+		acumulador += temp;
 	}
 
+	cout << endl << "TOTAL\t" << acumulador << endl;
 
+	/* Scores */
+	cout << "Ingrese su nombre" << endl;
+	string nombre;
+	cin.ignore();
+	getline(cin, nombre);
+	
+
+	ofstream scores ("scores.txt", ios::app);
+	if (scores.is_open())
+	{
+		scores << acumulador << ";" << nombre << "\n";
+		scores.close();
+	}
+	
+	else 
+		cout << "No se pudo guardar el score" << endl;
+
+	map<int,string> buscarScores;
+	ifstream scoreREAD("scores.txt");
+	if(scoreREAD.is_open())
+	{
+		while(getline(scoreREAD, str))
+		{
+			buscarScores[atoi(str.substr(0, str.find(";")).c_str())] = str.substr(str.find(";") + 1);
+
+		}
+		scoreREAD.close();
+	}
+
+	
 	return 0;
 }
 
@@ -171,8 +217,6 @@ char randomLetra()
 		return 'y';
 	else if (temp < 100)
 		return 'z';
-	else 
-		return '!';
 }
 
 bool checkLetra(char letra, string input)
