@@ -24,7 +24,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::unordered_map<std::string, int> diccionario; // hash table donde se guardaran las palabras
 	string str; //dicionario.txt >> str
 	ifstream file("diccionario.txt");
-	string decision = "r";
+	string decision = "-r";
 
 	srand(time(NULL));
 
@@ -55,82 +55,116 @@ int _tmain(int argc, _TCHAR* argv[])
 	char letra2; 
 	bool correcto;
 
-	/* JUGAR */
-	while(decision == "r") // decision al final
+	while(decision != "-exit")
 	{
-		t.start();
-		set<string> palabras;
-		correcto = true;
-		while(t.elapsedTime() < 5) //tiempo para contestar
+
+		/* JUGAR */
+		if(decision == "-r") // decision al final
 		{
-			if(correcto) //nuevas letras...
+			t.start();
+			set<string> palabras;
+			correcto = true;
+			while(t.elapsedTime() < 5) //tiempo para contestar
 			{
-				letra1 = randomLetra();
-				letra2 = randomLetra();
-				while(letra1==letra2)
-					letra2 = randomLetra();
-				cout << "Ingrese una palabra que contenga la letra " << letra1 << " y " << letra2 << endl;
-			}
-
-			cin >> str;
-
-			if(checkLetra(letra1,str) && checkLetra(letra2,str)) 
-			{
-				if (diccionario.find(str) != diccionario.end())
+				if(correcto) //nuevas letras...
 				{
-					palabras.insert(str);
-					correcto = true;
+					letra1 = randomLetra();
+					letra2 = randomLetra();
+					while(letra1==letra2)
+						letra2 = randomLetra();
+					cout << "Ingrese una palabra que contenga la letra " << letra1 << " y " << letra2 << endl;
+				}
+
+				cin >> str;
+
+				if(checkLetra(letra1,str) && checkLetra(letra2,str)) 
+				{
+					if (diccionario.find(str) != diccionario.end())
+					{
+						palabras.insert(str);
+						correcto = true;
+					}
+					else
+						correcto = false;
 				}
 				else
 					correcto = false;
 			}
-			else
-				correcto = false;
-		}
 
-		/* Generar tabla de puntos */
+			/* Generar tabla de puntos */
 
-		int acumulador = 0;
-		int temp;
+			int acumulador = 0;
+			int temp;
 
-		cout << "Palabra\t\tPuntos" << endl;
-		for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
-		{
-			temp = sumarPuntos(*set_it);
-			cout << *set_it << "\t\t" << temp <<endl;
-			acumulador += temp;
-		}
+			cout << "Palabra\t\tPuntos" << endl;
+			for(set<string>::iterator set_it = palabras.begin(); set_it != palabras.end(); set_it++)
+			{
+				temp = sumarPuntos(*set_it);
+				cout << *set_it << "\t\t" << temp <<endl;
+				acumulador += temp;
+			}
 
-		cout << endl << "TOTAL\t" << acumulador << endl;
+			cout << endl << "TOTAL\t" << acumulador << endl;
 
-		/* Scores */
-		cout << endl << "Ingrese su nombre para guardar el score" << endl;
-		string nombre;
-		cin.ignore();
-		getline(cin, nombre);
+			/* Scores */
+			cout << endl << "Ingrese su nombre para guardar el score" << endl;
+			string nombre;
+			cin.ignore();
+			getline(cin, nombre);
 	
 
-		ofstream scores ("scores.txt", ios::app);
-		if (scores.is_open())
-		{
-			scores << acumulador << ";" << nombre << "\n";
-			scores.close();
-		}
+			ofstream scores ("scores.txt", ios::app);
+			if (scores.is_open())
+			{
+				scores << acumulador << ";" << nombre << "\n";
+				scores.close();
+			}
 	
-		else 
-			cout << "No se pudo guardar el score" << endl;
+			else 
+				cout << "No se pudo guardar el score" << endl;
 
-		cout << endl << "Escriba un comando (r, -buscar *, -high)" << endl;
+		}	
+		
+		cout << endl << "Escriba un comando (-r, -buscar *, -high, -exit)" << endl;
 		getline(cin, decision);
-	}	
 
-	/*Genera y popula el multimapa desde "scores.txt", despues busca el nombre en "decision" en ese mapa*/
-	if (decision.substr(0,7) == "-buscar")
-	{
-		buscarNombre(decision.substr(8), crearMapa()); 
+		/*Genera y popula el multimapa desde "scores.txt", despues busca el nombre en "decision" en ese mapa*/
+		if (decision.substr(0,7) == "-buscar")
+		{
+			buscarNombre(decision.substr(8), crearMapa()); 
+		}
+
+		/*Highscore*/
+		if (decision == "-high")
+		{
+			set<pair<int,string>> highscores;
+			ifstream scoreREAD("scores.txt");
+			pair<int,string> temp;
+
+			if(scoreREAD.is_open())
+			{
+				while(getline(scoreREAD, str))
+				{
+					temp.first = atoi(str.substr(0, str.find(";")).c_str());
+					temp.second =str.substr(str.find(";") + 1);
+					highscores.insert(temp);
+
+				}
+				scoreREAD.close();
+			}
+			else
+				cout << "Error al generar mapa" << endl;
+		
+			cout << endl << "Posicion\tNombre\t\tScore\n";
+			int topten = 0;;
+			for (set<pair<int,string>>::reverse_iterator set_it = highscores.rbegin(); topten <10; set_it++)
+			{
+				cout << topten + 1 << ".\t\t" << set_it->second << "\t\t" << set_it->first << endl;
+				topten++;
+
+			}
+		}
 	}
-
-	
 	return 0;
 }
 
@@ -209,55 +243,55 @@ int sumarPuntos(string s)
 
 char randomLetra()
 {
-	int temp = rand()%100;
+	int temp = rand()%1000;
 
-	if (temp < 12)
+	if (temp < 125)
 		return 'a';
-	else if (temp < 14)
+	else if (temp < 139)
 		return 'b';
-	else if (temp < 18)
+	else if (temp < 186)
 		return 'c';
-	else if (temp < 24)
+	else if (temp < 244)
 		return 'd';
-	else if (temp < 37)
+	else if (temp < 381)
 		return 'e';
-	else if (temp < 38)
+	else if (temp < 388)
 		return 'f';
-	else if (temp < 39)
+	else if (temp < 398)
 		return 'g';
-	else if (temp < 40)
+	else if (temp < 405)
 		return 'h';
-	else if (temp < 46)
+	else if (temp < 467)
 		return 'i';
-	else if (temp < 47)
+	else if (temp < 471)
 		return 'j';
-	else if (temp < 52)
+	else if (temp < 521)
 		return 'l';
-	else if (temp < 55)
+	else if (temp < 552)
 		return 'm';
-	else if (temp < 62)
+	else if (temp < 622)
 		return 'n';
-	else if (temp < 70)
+	else if (temp < 709)
 		return 'o';
-	else if (temp < 72)
+	else if (temp < 734)
 		return 'p';
-	else if (temp < 73)
+	else if (temp < 743)
 		return 'q';
-	else if (temp < 80)
+	else if (temp < 811)
 		return 'r';
-	else if (temp < 88)
+	else if (temp < 891)
 		return 's';
-	else if (temp < 92)
+	else if (temp < 937)
 		return 't';
-	else if (temp < 96)
+	else if (temp < 976)
 		return 'u';
-	else if (temp < 97)
+	else if (temp < 985)
 		return 'v';
-	else if (temp < 98)
+	else if (temp < 987)
 		return 'x';
-	else if (temp < 99)
+	else if (temp < 996)
 		return 'y';
-	else if (temp < 100)
+	else if (temp < 1000)
 		return 'z';
 }
 
